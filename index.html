@@ -244,6 +244,9 @@
             transition: 0.3s;
             font-size: 0.85rem;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
         body.bg-gradient .view-all-btn {
@@ -263,6 +266,16 @@
             margin-bottom: 2rem;
         }
 
+        /* عرض عمودي للهاتف عند تفعيل full-view */
+        @media (max-width: 768px) {
+            .product-grid.full-view {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                overflow-x: visible !important;
+                gap: 1rem !important;
+            }
+        }
+
         .product-card {
             background: #ffffff;
             border-radius: 18px;
@@ -275,7 +288,7 @@
             flex-direction: column;
             height: 100%;
             width: 100%;
-            cursor: pointer; /* للإشارة إلى إمكانية النقر لعرض التفاصيل */
+            cursor: pointer;
         }
 
         body.bg-gradient .product-card {
@@ -295,7 +308,7 @@
             overflow: hidden;
             margin-bottom: 0.5rem;
             background: #f8f8f8;
-            pointer-events: none; /* الصورة لا تمنع النقر على البطاقة */
+            pointer-events: none;
         }
 
         .product-image img {
@@ -344,7 +357,7 @@
             width: 100%;
             border: 1px solid rgba(255,255,255,0.2);
             position: relative;
-            z-index: 2; /* ليكون فوق البطاقة */
+            z-index: 2;
         }
 
         .buy-btn i {
@@ -591,6 +604,7 @@
             .nav-links { display: none; }
             .hamburger { display: block; }
             .mobile-menu { position: relative; top: auto; width: 100%; order: 3; }
+            /* الوضع الأفقي الافتراضي للهاتف */
             .product-grid {
                 display: flex;
                 overflow-x: auto;
@@ -720,28 +734,28 @@
         <section id="section-discount" class="product-section">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-tag"></i> الخصومات</h2>
-                <button class="view-all-btn" data-section="discount">رؤية الكل <i class="fas fa-arrow-left"></i></button>
+                <button class="view-all-btn" data-section="discount" id="btn-discount"><i class="fas fa-eye"></i> رؤية الكل</button>
             </div>
             <div class="product-grid" id="discountsGrid"></div>
         </section>
         <section id="section-popular" class="product-section">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-fire"></i> الأكثر رواجاً</h2>
-                <button class="view-all-btn" data-section="popular">رؤية الكل <i class="fas fa-arrow-left"></i></button>
+                <button class="view-all-btn" data-section="popular" id="btn-popular"><i class="fas fa-eye"></i> رؤية الكل</button>
             </div>
             <div class="product-grid" id="popularGrid"></div>
         </section>
         <section id="section-accessory" class="product-section">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-clock"></i> الإكسسوارات</h2>
-                <button class="view-all-btn" data-section="accessory">رؤية الكل <i class="fas fa-arrow-left"></i></button>
+                <button class="view-all-btn" data-section="accessory" id="btn-accessory"><i class="fas fa-eye"></i> رؤية الكل</button>
             </div>
             <div class="product-grid" id="accessoriesGrid"></div>
         </section>
         <section id="section-new" class="product-section">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-sparkles"></i> الجديد لدينا</h2>
-                <button class="view-all-btn" data-section="new">رؤية الكل <i class="fas fa-arrow-left"></i></button>
+                <button class="view-all-btn" data-section="new" id="btn-new"><i class="fas fa-eye"></i> رؤية الكل</button>
             </div>
             <div class="product-grid" id="newGrid"></div>
         </section>
@@ -765,7 +779,7 @@
 
     <script>
         (function() {
-            // --- بيانات المنتجات مع تفاصيل إضافية ---
+            // --- بيانات المنتجات ---
             const products = [
                 { id: 1, name: 'تمثال تنين ناري', price: 14.99, section: 'discount', image: 'https://picsum.photos/200/200?random=1', material: 'راتنج', weight: '350 جم', length: '15 سم', width: '8 سم', description: 'تمثال تنين ناري ثلاثي الأبعاد بتفاصيل دقيقة.' },
                 { id: 2, name: 'سيف التنين العتيق', price: 22.50, section: 'discount', image: 'https://picsum.photos/200/200?random=2', material: 'بلاستيك صلب', weight: '420 جم', length: '32 سم', width: '5 سم', description: 'سيف حاد يشبه الأساطير القديمة.' },
@@ -805,6 +819,13 @@
                 new: document.getElementById('newGrid'),
                 all: document.getElementById('allProductsGrid')
             };
+            // أزرار رؤية الكل
+            const viewAllBtns = {
+                discount: document.getElementById('btn-discount'),
+                popular: document.getElementById('btn-popular'),
+                accessory: document.getElementById('btn-accessory'),
+                new: document.getElementById('btn-new')
+            };
 
             // دوال العرض
             function renderSection(section, limit = null) {
@@ -833,19 +854,85 @@
                 `).join('');
             }
 
+            // إعادة تعيين جميع الأزرار إلى "رؤية الكل"
+            function resetAllButtons() {
+                for (let key in viewAllBtns) {
+                    if (viewAllBtns[key]) {
+                        viewAllBtns[key].innerHTML = '<i class="fas fa-eye"></i> رؤية الكل';
+                    }
+                }
+            }
+
+            // إزالة كلاس full-view من جميع الأقسام
+            function removeFullViewFromAll() {
+                for (let key in grids) {
+                    if (grids[key]) {
+                        grids[key].classList.remove('full-view');
+                    }
+                }
+            }
+
+            // الصفحة الرئيسية (الأقسام الأربعة مع 4 منتجات)
             function showHome() {
+                // إخفاء all
                 sections.all.classList.add('section-hidden');
-                for (let key in sections) if (key !== 'all') sections[key].classList.remove('section-hidden');
+                // إظهار الأقسام الأخرى
+                for (let key in sections) {
+                    if (key !== 'all') {
+                        sections[key].classList.remove('section-hidden');
+                    }
+                }
+                // عرض 4 منتجات لكل قسم
                 renderSection('discount', 4);
                 renderSection('popular', 4);
                 renderSection('accessory', 4);
                 renderSection('new', 4);
+                // إعادة تعيين الأزرار
+                resetAllButtons();
+                // إزالة full-view
+                removeFullViewFromAll();
             }
 
+            // عرض جميع منتجات قسم معين (full)
+            function showSectionFull(section) {
+                // إخفاء all والأقسام الأخرى
+                sections.all.classList.add('section-hidden');
+                for (let key in sections) {
+                    if (key !== section) {
+                        sections[key].classList.add('section-hidden');
+                    }
+                }
+                // إظهار القسم المطلوب
+                sections[section].classList.remove('section-hidden');
+                // عرض جميع منتجاته
+                renderSection(section);
+                // تغيير زر هذا القسم إلى "رجوع"
+                if (viewAllBtns[section]) {
+                    viewAllBtns[section].innerHTML = '<i class="fas fa-arrow-right"></i> رجوع';
+                }
+                // إزالة full-view من الجميع ثم إضافته لهذا القسم
+                removeFullViewFromAll();
+                if (grids[section]) {
+                    grids[section].classList.add('full-view');
+                }
+            }
+
+            // عرض جميع المنتجات (قسم all)
             function showAll() {
-                for (let key in sections) if (key !== 'all') sections[key].classList.add('section-hidden');
+                for (let key in sections) {
+                    if (key !== 'all') {
+                        sections[key].classList.add('section-hidden');
+                    }
+                }
                 sections.all.classList.remove('section-hidden');
                 renderAllProducts();
+                // إعادة تعيين أزرار الأقسام (لأننا انتقلنا للكل)
+                resetAllButtons();
+                // إزالة full-view من الجميع ثم إضافته لقسم all
+                removeFullViewFromAll();
+                if (grids.all) {
+                    grids.all.classList.add('full-view');
+                }
             }
 
             // تهيئة
@@ -961,7 +1048,6 @@
                 if (e.target === detailsModal) closeDetailsModal();
             });
 
-            // زر الشراء داخل مودال التفاصيل يفتح مودال الشراء
             detailsBuyBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const productData = this.getAttribute('data-product');
@@ -976,17 +1062,16 @@
                 }
             });
 
-            // --- التقاط الأحداث على البطاقات والأزرار ---
+            // --- أحداث النقر على البطاقات والأزرار ---
             document.body.addEventListener('click', function(e) {
-                // زر الشراء (مودال الشراء)
+                // زر الشراء
                 const buyBtn = e.target.closest('.buy-btn');
                 if (buyBtn) {
                     e.preventDefault();
-                    e.stopPropagation(); // لمنع فتح تفاصيل المنتج
+                    e.stopPropagation();
                     const productData = buyBtn.getAttribute('data-product');
                     if (productData) {
                         try {
-                            // إصلاح الأحرف الخاصة
                             const parsed = JSON.parse(productData.replace(/&apos;/g, "'"));
                             openOrderModal(parsed);
                         } catch (err) {
@@ -996,7 +1081,7 @@
                     return;
                 }
 
-                // فتح مودال التفاصيل عند النقر على البطاقة (وليس الزر)
+                // فتح تفاصيل المنتج عند النقر على البطاقة
                 const card = e.target.closest('.product-card');
                 if (card) {
                     const productId = card.getAttribute('data-product-id');
@@ -1009,7 +1094,26 @@
                 }
             });
 
-            // روابط التنقل
+            // --- معالج النقر على أزرار رؤية الكل (مع تبديل النص) ---
+            for (let section in viewAllBtns) {
+                const btn = viewAllBtns[section];
+                if (btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const currentText = btn.innerText.trim();
+                        if (currentText.includes('رؤية الكل')) {
+                            // عرض جميع منتجات هذا القسم
+                            showSectionFull(section);
+                        } else {
+                            // رجوع إلى الصفحة الرئيسية
+                            showHome();
+                        }
+                    });
+                }
+            }
+
+            // روابط التنقل (الشريط العلوي)
             function handleNavClick(e) {
                 e.preventDefault();
                 const link = e.currentTarget;
@@ -1018,27 +1122,23 @@
                     document.getElementById('contact-footer').scrollIntoView({ behavior: 'smooth' });
                     return;
                 }
-                if (section === 'home') { showHome(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-                if (section === 'all') { showAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+                if (section === 'home') {
+                    showHome();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+                if (section === 'all') {
+                    showAll();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
                 if (sections[section]) {
-                    for (let key in sections) sections[key].classList.add('section-hidden');
-                    sections[section].classList.remove('section-hidden');
-                    renderSection(section);
+                    // إذا كان الرابط يشير إلى قسم، نعرض جميع منتجات ذلك القسم
+                    showSectionFull(section);
                     sections[section].scrollIntoView({ behavior: 'smooth' });
                 }
             }
             document.querySelectorAll('[data-section]').forEach(link => link.addEventListener('click', handleNavClick));
-
-            // أزرار رؤية الكل
-            document.querySelectorAll('.view-all-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    const section = this.getAttribute('data-section');
-                    for (let key in sections) sections[key].classList.add('section-hidden');
-                    sections[section].classList.remove('section-hidden');
-                    renderSection(section);
-                    sections[section].scrollIntoView({ behavior: 'smooth' });
-                });
-            });
 
             // البحث
             const searchToggle = document.getElementById('searchToggle');
@@ -1063,6 +1163,10 @@
                         <button class="buy-btn" data-product='${JSON.stringify(p).replace(/'/g, "&apos;")}'><i class="fab fa-whatsapp"></i> شراء</button>
                     </div>
                 `).join('');
+                // تفعيل العرض العمودي للبحث
+                removeFullViewFromAll();
+                if (grids.all) grids.all.classList.add('full-view');
+                resetAllButtons();
             });
 
             // تبديل الثيم
